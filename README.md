@@ -27,7 +27,8 @@ limiting in front of it yet. See
 
 Phases 0-4 done and live-verified; Phase 5 mostly done (Cloud Run
 deployment, per-service Agent Identity + IAM, Agent Registry, correlation-id
-observability — all live; Agent Gateway and Memory Bank not) — see
+observability, and Vertex AI Memory Bank — all live; Agent Gateway is
+the one piece not built, see docs/ROADMAP.md for why) — see
 docs/ROADMAP.md for the exact definition of done and what's left in each.
 All 6 `mcp-services/*` are deployed to Cloud Run, `--no-allow-unauthenticated`,
 one dedicated service account each — see

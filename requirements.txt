@@ -7,7 +7,13 @@
 # FastMCP to MCPServer and broke an import MCPToolset depends on
 # (mcp.shared.session.ProgressFnT). Every mcp-services/*/server.py uses
 # `mcp.server.fastmcp.FastMCP`, matching this pin. See docs/ROADMAP.md.
-google-adk>=2.7.1
+#
+# [gcp] extra pulls in the `vertexai` package — required by web_app.py's
+# Vertex AI Memory Bank wiring (VertexAiMemoryBankService). Deploying
+# without it crashes the container at startup with an ImportError, found
+# live: the first redeploy after adding memory_service_uri failed to
+# start and listen on $PORT, because this extra was still missing here.
+google-adk[gcp]>=2.7.1
 mcp>=1.24,<2
 simple-salesforce>=1.12.6
 pytest>=8.0.0

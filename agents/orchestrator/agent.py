@@ -28,7 +28,11 @@ import sys
 from pathlib import Path
 
 from google.adk.agents import Agent
+from google.adk.memory.memory_entry import MemoryEntry
+from google.adk.tools import load_memory
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types as genai_types
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -55,10 +59,11 @@ def _load_module(path: Path, unique_name: str):
 
 # mcp-services/salesforce is a standalone service directory (hyphenated on
 # purpose — see mcp-services/salesforce/README.md), not a Python package.
-# Phase 1 loads its client function directly for fast local iteration; a
-# later phase replaces this with an MCPToolset call to the deployed Cloud
-# Run service, routed through Agent Gateway, without changing this agent's
-# instruction or the tool's signature.
+# Loads its client function directly for fast local iteration and because
+# this agent isn't deployed as its own callable service yet; switching to
+# an MCPToolset call against the already-deployed Cloud Run service is the
+# next step (see infrastructure/README.md's Phase 5 notes on why that
+# hasn't happened and what "Agent Gateway" actually means here).
 _salesforce_client_module = _load_module(
     _REPO_ROOT / "mcp-services" / "salesforce" / "client.py",
     "dealpilot_salesforce_client",
@@ -101,7 +106,9 @@ def get_opportunity(opportunity_id: str) -> dict:
     return get_client().get_opportunity(opportunity_id)
 
 
-def confirm_opportunity_field(opportunity_id: str, field: str, value: str) -> dict:
+async def confirm_opportunity_field(
+    opportunity_id: str, field: str, value: str, tool_context: ToolContext
+) -> dict:
     """Persist the seller's answer to one previously-missing field.
 
     Args:
@@ -128,7 +135,39 @@ def confirm_opportunity_field(opportunity_id: str, field: str, value: str) -> di
         expected_version=current["version"],
         idempotency_key=idempotency_key,
     )
-    return sf_client.get_opportunity(opportunity_id)
+    updated = sf_client.get_opportunity(opportunity_id)
+
+    # Best-effort: write this confirmed answer to Memory Bank so a later
+    # conversation about the same opportunity can recall it via
+    # load_memory, instead of the seller having to re-derive the same
+    # context from scratch. Never blocks the write above on failure — a
+    # missing/unconfigured memory service (e.g. local dev without
+    # --memory_service_uri) must not break confirm_opportunity_field
+    # itself, only skip the recall benefit.
+    try:
+        await tool_context.add_memory(
+            memories=[
+                MemoryEntry(
+                    author="user",
+                    content=genai_types.Content(
+                        role="user",
+                        parts=[
+                            genai_types.Part(
+                                text=(
+                                    f"For opportunity {opportunity_id} "
+                                    f"({updated.get('Name', 'unknown name')}), the "
+                                    f"seller confirmed {field} = {coerced_value}."
+                                )
+                            )
+                        ],
+                    ),
+                )
+            ]
+        )
+    except ValueError:
+        pass
+
+    return updated
 
 
 def _coerce_field_value(field: str, raw_value: str):
@@ -161,10 +200,18 @@ You are the Deal Orchestrator for EnterpriseDealPilot.
 
 When a seller gives you an Opportunity Id:
 1. Call get_opportunity to retrieve its whitelisted fields.
-2. If `missing_fields` is non-empty, ask the seller ONE targeted question
-   per missing field, and briefly explain why it matters (for example:
-   "Data residency affects which product bundle is eligible"). Never
-   invent or assume an answer on the seller's behalf.
+2. If `missing_fields` is non-empty, call load_memory with a query
+   naming the opportunity id and the missing field before asking the
+   seller — a prior conversation about this same opportunity may have
+   already confirmed it. If load_memory returns a clear, matching prior
+   answer, mention it and ask the seller to confirm it's still accurate
+   ("Last time, budget was confirmed as approved — still the case?")
+   rather than treating it as settled on its own; a recalled memory is a
+   shortcut to asking the right question, never a replacement for the
+   seller's own confirmation. If load_memory finds nothing relevant, ask
+   the question fresh. For each missing field, briefly explain why it
+   matters (for example: "Data residency affects which product bundle is
+   eligible"). Never invent or assume an answer on the seller's behalf.
 3. When the seller answers a question, call confirm_opportunity_field with
    that exact field name and their answer as text. Its result already
    reflects the write — use its own missing_fields to decide what's still
@@ -208,6 +255,7 @@ proposal_communication_agent.
     tools=[
         get_opportunity,
         confirm_opportunity_field,
+        load_memory,
         solution_pricing_tool,
         risk_approval_tool,
         proposal_communication_tool,

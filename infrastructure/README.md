@@ -232,6 +232,67 @@ everything that happened for this one request" without standing up a
 second tracing backend. Cloud Trace API (`cloudtrace.googleapis.com`) is
 enabled on the project if trace-level instrumentation is wanted later.
 
+## Memory Bank
+
+Real Vertex AI Memory Bank, not a stand-in — a lightweight Agent Engine
+instance (`projects/444613256262/locations/us-central1/reasoningEngines/6067128801567965184`)
+created with no deployed agent code (`agent_engines.create()` with no
+`agent`/`agent_engine` argument returns exactly this: "a lightweight
+instance that cannot be queried [as an agent] but can be updated" — used
+here purely as a memory scope). Wired into `web_app.py` via
+`get_fast_api_app(..., memory_service_uri="agentengine://<full resource
+name>")`.
+
+`agents/orchestrator/agent.py`:
+- `confirm_opportunity_field` writes a `MemoryEntry` via
+  `tool_context.add_memory(...)` immediately after every confirmed
+  Salesforce field write — best-effort, wrapped in `try/except ValueError`
+  so a missing/unconfigured memory service (local dev without
+  `--memory_service_uri`) never blocks the underlying write.
+- ADK's built-in `load_memory` tool is added to the orchestrator's tool
+  list. The instruction directs it to call `load_memory` before asking
+  about a missing field, and — matching the existing "never invent an
+  answer" rule — to surface a recalled fact for the seller to
+  **re-confirm**, never to treat it as settled on its own.
+
+Two real bugs, both found only once this was exercised for real:
+
+- **Use the numeric project number, not the project id string**, in the
+  full `agentengine://projects/<number>/locations/<region>/reasoningEngines/<id>`
+  URI. The Memory Bank API's `RetrieveMemories` call rejects the string
+  id (`enterprisedealpilot`) with `RESOURCE_PROJECT_INVALID` — the
+  resource's own name, as returned by `agent_engines.create()`, is
+  authoritative and uses the number. The full-URI form (vs. the
+  short-id form) also matters independently: it pins
+  `location=us-central1`, where the Memory Bank resource actually lives,
+  regardless of `GOOGLE_CLOUD_LOCATION=global` (set for
+  `gemini-3.6-flash`'s sake elsewhere in the same process).
+- **`GOOGLE_GENAI_USE_VERTEXAI=True` has a surprising side effect on
+  Memory Bank specifically.** It makes ADK's `is_enterprise_mode_enabled()`
+  return `True`, and once that's true, the Memory Bank client silently
+  switches to an incompatible "Express Mode" — and fails with the same
+  confusing `RESOURCE_PROJECT_INVALID` error — if `GOOGLE_API_KEY` is
+  present in the environment at all, even with `project`/`location`
+  explicitly passed to the service. Identical code succeeded in isolation
+  and failed only once `.env` (carrying a leftover `GOOGLE_API_KEY` from
+  the pre-Vertex-AI free tier) was sourced into the same process. Fixed
+  by removing the now-unneeded key from `.env` and defensively popping it
+  in `web_app.py` regardless of what the environment carries.
+- Also required adding the `[gcp]` extra to `google-adk` in
+  `requirements.txt` (pulls in the `vertexai` package) — the first
+  redeploy after wiring this in crashed at container startup with the
+  package missing, since it had only been installed locally, not
+  declared as a dependency.
+
+Live-verified end to end against the deployed public demo (`dealpilot-web`),
+not just locally: a business decision confirmed in one session was
+correctly recalled by a brand-new session after a full container restart
+— which resets the in-memory Salesforce fixture data, proving the
+recall came from Memory Bank and not from fixture state leaking across
+sessions. The orchestrator surfaced the recalled fact and asked the
+seller to confirm it was still accurate, rather than skipping the
+question.
+
 ## Verifying the deployment end to end
 
 ```bash
@@ -255,7 +316,6 @@ correlation id spanning all of the above in Cloud Logging.
 - Agent Gateway and Agent-to-Agent `bindings` — blocked on the 4 ADK
   agents not being deployed as independently callable services (see
   above). A materially larger, separate task if wanted.
-- Memory Bank for confirmed, scoped user/account preferences.
 - Terraform — this is still a manual `gcloud` sequence, documented here
   for reproducibility, not yet codified as IaC.
 - Pub/Sub approval topic + Eventarc-driven resume (see

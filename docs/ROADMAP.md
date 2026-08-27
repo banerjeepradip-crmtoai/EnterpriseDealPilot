@@ -188,7 +188,7 @@ through prose.** The pricing-signature fix (below) is the same lesson
 from the opposite direction — trust nothing an LLM re-typed, whether it's
 a number or a whole structure.
 
-## Phase 5 — Governance & Observability (Cloud Run + IAM + Registry + logging done; Gateway and Memory Bank not)
+## Phase 5 — Governance & Observability (Cloud Run + IAM + Registry + logging + Memory Bank done; Agent Gateway not)
 - [x] **Cloud Run deployment.** All 6 `mcp-services/*` deployed as independent Cloud Run
       services (region `us-central1`, project `enterprisedealpilot`), one shared root
       `Dockerfile` selecting which service runs via `MCP_SERVICE_DIR` at deploy time. Required
@@ -236,7 +236,26 @@ a number or a whole structure.
       Agent Registry service discovery — is the practical equivalent today. Deploying the
       agents themselves as callable services is the real next step if this is wanted, and is
       a materially larger, separate task.
-- [ ] Memory Bank wired for confirmed, scoped user/account preferences only — not started
+- [x] **Memory Bank**, wired for confirmed, scoped opportunity preferences. Real Vertex
+      AI Memory Bank — a lightweight Agent Engine instance
+      (`projects/444613256262/locations/us-central1/reasoningEngines/6067128801567965184`)
+      created with no deployed agent code, used purely as a memory scope. The orchestrator's
+      `confirm_opportunity_field` writes a fact to it right after every confirmed Salesforce
+      write; the built-in `load_memory` tool is added to the orchestrator so it can check for
+      a prior confirmation before asking a missing-field question again — and, per the
+      "never invent an answer" rule, a recalled fact is surfaced for the seller to
+      re-confirm, never treated as settled on its own. Two real bugs found getting this
+      working: (1) the Memory Bank resource must be addressed by its **numeric** project
+      number, not the project id string — the API rejects the string with
+      `RESOURCE_PROJECT_INVALID`; (2) `GOOGLE_GENAI_USE_VERTEXAI=True` (set for Gemini's
+      sake) makes ADK treat "Enterprise mode" as enabled, which silently switches the Memory
+      Bank client into an incompatible "Express Mode" if `GOOGLE_API_KEY` is present in the
+      environment at all — even with project/location explicitly passed — fixed by dropping
+      the now-unneeded key from `.env` and defensively popping it in `web_app.py`. Live-verified
+      end to end against the deployed public demo, not just locally: a fact confirmed in one
+      session was recalled by a brand-new session after a full server restart (which resets
+      the in-memory Salesforce fixture, proving the recall came from Memory Bank, not fixture
+      state bleeding across sessions).
 
 ## Phase 6 — UI, Hardening & Demo
 - [ ] Salesforce LWC or lightweight React UI on top of the golden path
