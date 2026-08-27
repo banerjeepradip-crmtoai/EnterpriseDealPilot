@@ -111,6 +111,96 @@ done by hand this time via `sf data update record`.
 write back to `Quote.Approval_Status__c` — that field is only set once,
 at Quote creation time.
 
+## DealPilot Agent LWC
+
+`force-app/main/default/lwc/dealPilotAgent` — a chat panel for the
+Opportunity record page, replacing `adk web`'s dev UI as the demo surface
+(see `docs/ROADMAP.md` Phase 6 and `frontend/README.md`). Three pieces:
+
+- **`dealPilotAgent`** (LWC) — reads `recordId` from the record page
+  context, so the seller never types an Opportunity Id. A status rail
+  (budget, data residency, latest quote, approval) is read live via
+  `getDealStatus`'s SOQL, not parsed out of the chat transcript, so it
+  stays correct even if the agent's wording changes. Chat is rendered with
+  SLDS's own chat blueprint classes (`slds-chat-list`,
+  `slds-chat-message__text_inbound`/`_outbound`) — no custom CSS
+  framework, no static resource.
+- **`DealPilotAgentController`** (Apex) — the only thing that changes
+  between "demo" and "real": it calls the exact same REST endpoints the
+  ADK dev UI itself calls (`POST /apps/orchestrator/users/{id}/sessions`,
+  `POST /run`), via `callout:DealPilot_Agent`. `agents/orchestrator`
+  doesn't know or care whether the caller is the dev UI or this
+  controller. Response parsing only pulls `content.parts[].text` off
+  non-`user` events — sub-agent delegation shows up as
+  `functionCall`/`functionResponse` parts with no `text`, so tool-call
+  plumbing never leaks into the chat as raw JSON.
+- **`DealPilot_Setting__mdt`** (Custom Metadata Type, one record —
+  `Default`) **+ `DealPilot_Agent`** (Remote Site Setting) — the one
+  thing that changes between environments. `Default.Base_URL__c` is the
+  only place the backend's address lives; swapping it (and the matching
+  Remote Site Setting `url`) is a metadata/data update, never an Apex
+  change. Not a Named Credential: this org's Metadata API rejects an
+  External Credential with `authenticationProtocol` `NoAuthentication`
+  ("External Credentials don't support the 'NoAuthentication'
+  authentication protocol" — confirmed live via a dry-run deploy), and
+  the ADK backend has no real auth to pair one with. A plain callout
+  against a Remote-Site-Setting-allow-listed host is the correct, simpler
+  mechanism for a genuinely public, unauthenticated endpoint. Ships
+  pointed at the already-public, fixture-mode Cloud Run demo
+  (`dealpilot-web`) as a safe default that's real and callable out of the
+  box — but fixture mode only recognizes the two fixture opportunity ids,
+  not a real Salesforce Id, so dropping the LWC onto an actual
+  Opportunity record needs a `SALESFORCE_MODE=live` backend instead (see
+  below).
+
+### Testing against this org, in real time, without a Cloud Run redeploy
+
+Salesforce can't call `localhost`, so getting a locally-run,
+`SALESFORCE_MODE=live` backend (writing to *this* org in real time) in
+front of the LWC needs a tunnel:
+
+```bash
+# 1. .env: SALESFORCE_MODE=live, plus either SALESFORCE_SESSION_ID +
+#    SALESFORCE_INSTANCE_URL (short-lived, from
+#    `SF_TEMP_SHOW_SECRETS=true sf org display --target-org enterprisedealpilot --json`)
+#    or the durable username/password/token path. Never commit this file.
+uvicorn web_app:app --port 8080
+
+# 2. In a second terminal — any HTTPS tunnel works; ngrok shown here:
+ngrok http 8080
+```
+
+Then update both to the `https://*.ngrok-free.app` URL ngrok prints —
+`DealPilot_Setting__mdt`'s `Default` record (`Base_URL__c`) and the
+`DealPilot_Agent` Remote Site Setting's `url` (Setup → Custom Metadata
+Types / Remote Site Settings in the target org, or edit
+`customMetadata/DealPilot_Setting.Default.md-meta.xml` and
+`remoteSiteSettings/DealPilot_Agent.remoteSiteSetting-meta.xml` and
+redeploy) — and deploy the LWC/Apex/permission set:
+
+```bash
+sf project deploy start --source-dir force-app/main/default --target-org enterprisedealpilot
+sf org assign permset --name EnterpriseDealPilot_Access --target-org enterprisedealpilot
+```
+
+Then, in Lightning App Builder, drag `DealPilot Deal Orchestrator` onto
+the Opportunity record page (Setup → Object Manager → Opportunity → Lightning
+Record Pages, or Edit Page from an Opportunity record) and activate it —
+not scripted here on purpose, since it edits the org's existing page
+layout and should be a deliberate, visible action, not something applied
+blindly underneath an existing layout.
+
+**A tunnel URL is temporary** — it changes every time ngrok restarts
+(free tier), so the Named Credential needs re-pointing each session until
+this graduates to a real `SALESFORCE_MODE=live` Cloud Run deployment
+(tracked as a Phase 6 follow-up, not yet done — see `frontend/README.md`).
+
+**Remember the same reset step `create_quote_draft` live-testing already
+requires**, above: any real conversation run through the LWC against
+Nordic Telecom AB will fill in `Budget_Confirmed__c`/`Data_Residency__c`
+and may create a real Quote — reset those fields and delete test Quotes
+afterward or the clarification-path demo breaks silently.
+
 ## Auth for the Python client
 
 Two paths, see `.env.sample`:

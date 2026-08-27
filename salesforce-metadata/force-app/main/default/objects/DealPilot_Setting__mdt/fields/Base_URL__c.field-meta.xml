@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Base_URL__c</fullName>
+    <externalId>false</externalId>
+    <label>Base URL</label>
+    <length>255</length>
+    <required>true</required>
+    <type>Text</type>
+    <description>Base URL (no trailing slash) of the ADK backend&apos;s web_app.py DealPilotAgentController calls, e.g. https://xxxx.ngrok-free.app. Must also be allow-listed in the DealPilot_Agent Remote Site Setting — update both together when repointing.</description>
+</CustomField>

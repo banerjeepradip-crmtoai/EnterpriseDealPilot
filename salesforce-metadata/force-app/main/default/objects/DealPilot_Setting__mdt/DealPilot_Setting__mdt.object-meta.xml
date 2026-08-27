@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>DealPilot Setting</label>
+    <pluralLabel>DealPilot Settings</pluralLabel>
+    <visibility>Public</visibility>
+    <description>Configurable base URL for the ADK backend DealPilotAgentController calls. Repointing it (an ngrok tunnel to a local SALESFORCE_MODE=live instance, or a future live-mode Cloud Run deployment) is a metadata/data update, never an Apex code change — see salesforce-metadata/README.md&apos;s &quot;DealPilot Agent LWC&quot; section.</description>
+</CustomObject>

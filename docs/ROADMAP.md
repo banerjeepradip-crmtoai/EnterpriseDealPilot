@@ -258,7 +258,14 @@ a number or a whole structure.
       state bleeding across sessions).
 
 ## Phase 6 — UI, Hardening & Demo
-- [ ] Salesforce LWC or lightweight React UI on top of the golden path
+- [ ] Salesforce LWC on top of the golden path — **built, not yet deployed
+      or live-verified.** `dealPilotAgent` (LWC) + `DealPilotAgentController`
+      (Apex) + `DealPilot_Setting__mdt`/`DealPilot_Agent` (Custom Metadata
+      + Remote Site Setting) exist as SFDX source;
+      Apex contract tests (mocked callouts) pass. Not yet done: deployed to
+      `enterprisedealpilot`, placed on the Opportunity record page via
+      Lightning App Builder, or clicked through against a running backend.
+      See `salesforce-metadata/README.md`'s "DealPilot Agent LWC" section.
 - [ ] Failure rehearsal: retry, rejection, timeout, duplicate-callback, region-violation tests pass
 - [ ] README spin-up tested from a clean environment
 - [ ] Four-minute demo video, submission checklist complete

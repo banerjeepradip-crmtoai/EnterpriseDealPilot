@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Use_Case__c</fullName>
-    <label>Use Case</label>
-    <type>Text</type>
-    <length>255</length>
     <description>Free-text summary of what the customer needs. EnterpriseDealPilot&apos;s Solution &amp; Pricing agent reads this to pick an eligible product bundle.</description>
+    <externalId>false</externalId>
+    <label>Use Case</label>
+    <length>255</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
 </CustomField>

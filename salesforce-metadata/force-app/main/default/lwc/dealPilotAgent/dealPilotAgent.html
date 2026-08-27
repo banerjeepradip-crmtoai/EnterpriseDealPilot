@@ -1,0 +1,87 @@
+<template>
+    <lightning-card title="DealPilot Deal Orchestrator" icon-name="standard:bot">
+        <div slot="actions">
+            <template if:false={started}>
+                <lightning-button
+                    variant="brand"
+                    label="Start conversation"
+                    disabled={startDisabled}
+                    onclick={handleStart}
+                ></lightning-button>
+            </template>
+        </div>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <div class="slds-grid slds-wrap slds-gutters_x-small dp-status-grid">
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                    <p class="slds-text-title_caps slds-text-color_weak">Budget</p>
+                    <p class="slds-text-body_regular">{budgetConfirmedLabel}</p>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                    <p class="slds-text-title_caps slds-text-color_weak">Data residency</p>
+                    <p class="slds-text-body_regular">{dataResidencyLabel}</p>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                    <p class="slds-text-title_caps slds-text-color_weak">Quote</p>
+                    <p class="slds-text-body_regular">{quoteLabel}</p>
+                    <p class="slds-text-body_small slds-text-color_weak">{signedTotalLabel}</p>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                    <p class="slds-text-title_caps slds-text-color_weak">Approval</p>
+                    <span class={approvalBadgeClass}>{approvalStatusLabel}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:true={loading}>
+                <lightning-spinner alternative-text="Working" size="small"></lightning-spinner>
+            </template>
+
+            <template if:false={started}>
+                <p class="slds-text-color_weak slds-p-vertical_medium">
+                    Start a conversation to have the Deal Orchestrator review this
+                    opportunity, confirm any missing details, and walk it through
+                    pricing, approval, and proposal.
+                </p>
+            </template>
+
+            <template if:true={started}>
+                <ul class="slds-chat-list dp-chat-list" role="log">
+                    <template for:each={messages} for:item="message">
+                        <li key={message.id} class={message.listItemClass}>
+                            <div class="slds-chat-message">
+                                <div class="slds-chat-message__body">
+                                    <div class={message.textClass}>{message.text}</div>
+                                    <p class="slds-chat-message__meta">{message.author}</p>
+                                </div>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+
+                <div class="slds-grid slds-grid_vertical-align-end slds-p-top_small">
+                    <div class="slds-col slds-grow slds-p-right_small">
+                        <lightning-input
+                            type="text"
+                            label="Message"
+                            variant="label-hidden"
+                            placeholder="Answer DealPilot or ask a question..."
+                            value={draft}
+                            onchange={handleDraftChange}
+                            onkeyup={handleKeyUp}
+                        ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-no-flex">
+                        <lightning-button
+                            variant="brand"
+                            label="Send"
+                            disabled={sendDisabled}
+                            onclick={handleSend}
+                        ></lightning-button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

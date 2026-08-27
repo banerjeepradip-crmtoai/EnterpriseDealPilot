@@ -12,24 +12,65 @@ Short-form progress tracker: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Try it live
 
-**https://dealpilot-web-444613256262.us-central1.run.app** — the hosted
-ADK dev UI, running on real Gemini via Vertex AI. Open it, pick
+Two separate front doors, deliberately kept apart — see
+`docs/ROADMAP.md`'s Phase 6 for why they aren't merged into one UI.
+
+**Public web — https://dealpilot-web-444613256262.us-central1.run.app** —
+the hosted ADK dev UI, running on real Gemini via Vertex AI. Open it, pick
 "orchestrator," and try `opp_ready_example` or
 `opp_nordic_telecom_renewal`. Public, no login — anyone with the link can
 test it. Runs on fixture Salesforce data (no real org writes possible
 from this URL). Since it's unauthenticated and calls a billed Gemini
 model per turn, treat the link as semi-private (share with judges/testers,
 don't post it somewhere that invites high traffic) — there's no rate
-limiting in front of it yet. See
+limiting in front of it yet. Left as the plain engineering tool on
+purpose: polishing it wouldn't showcase anything Google-Cloud-side that
+isn't already proven elsewhere. See
 [infrastructure/README.md](infrastructure/README.md) for how it's deployed.
+
+**Inside Salesforce — `dealPilotAgent` LWC** on the Opportunity record
+page. This is the actual product experience and where the "completes the
+governed workflow, not just chat" claim gets proven against real
+Salesforce data — a seller opens a deal, clicks Start, and the same agent
+fleet walks it through pricing, approval, and proposal, writing real
+Quote/ContentVersion records back. Needs org access, so it isn't
+something a stranger with just a link can try — see
+[salesforce-metadata/README.md](salesforce-metadata/README.md)'s
+"DealPilot Agent LWC" section for what it is and its current one honest
+limit: the backend it calls runs locally behind an ngrok tunnel, so it
+only works while that process is up (not yet a standing Cloud Run
+deployment).
 
 ## Status
 
 Phases 0-4 done and live-verified; Phase 5 mostly done (Cloud Run
 deployment, per-service Agent Identity + IAM, Agent Registry, correlation-id
 observability, and Vertex AI Memory Bank — all live; Agent Gateway is
-the one piece not built, see docs/ROADMAP.md for why) — see
+the one piece not built, see docs/ROADMAP.md for why); Phase 6 in
+progress (the Salesforce LWC below is built and live-verified; a standing
+Cloud Run deployment for its backend, failure rehearsal, and a
+clean-environment spin-up test remain open) — see
 docs/ROADMAP.md for the exact definition of done and what's left in each.
+
+**Salesforce LWC (`dealPilotAgent` + `DealPilotAgentController`)** —
+deployed to the connected org and live-verified end to end: resolved a
+real Opportunity, created a real Quote (idempotently replayed rather than
+duplicated on a repeat run), attached a real proposal as a Salesforce
+ContentVersion, and completed an authorized "send" recorded locally. Its
+endpoint is a Custom Metadata Type record, not a Named Credential — this
+org's Metadata API rejects an External Credential with
+`authenticationProtocol` `NoAuthentication`, confirmed live via a failed
+deploy, not assumed. See
+[salesforce-metadata/README.md](salesforce-metadata/README.md)'s
+"DealPilot Agent LWC" section.
+
+**Real email dispatch is still out of scope, on purpose.**
+`mcp-services/communication`'s send gate is fully real and live-verified
+(a token must be explicitly authorized before `send_email` will accept
+it), but no SMTP/provider integration exists yet — a "sent" email is
+recorded locally, never actually delivered. This is documented scope, not
+a bug; see `mcp-services/communication/README.md`.
+
 All 6 `mcp-services/*` are deployed to Cloud Run, `--no-allow-unauthenticated`,
 one dedicated service account each — see
 [infrastructure/README.md](infrastructure/README.md) for the live URLs,
@@ -141,7 +182,8 @@ mcp-services/
   security/                   content screening (real Model Armor in live mode)
   communication/               gated, recipient-bound email send
 infrastructure/            live Cloud Run deployment (see infrastructure/README.md); Terraform later
-salesforce-metadata/       SFDX project — custom fields, permission set, synthetic data
+salesforce-metadata/       SFDX project — custom fields, permission set, synthetic data,
+                             the dealPilotAgent LWC + Apex controller (see its own README)
 tests/                     contract and unit tests
 samples/                   synthetic Salesforce fixtures (mirrored in the live org)
 docs/                      roadmap and supporting docs
