@@ -278,6 +278,12 @@ class LiveSalesforceClient:
         create a duplicate File; low business risk for a demo proposal
         attachment, unlike a duplicate Quote or a double-applied field
         write, so left as a known limitation rather than built out.
+
+        `.html`, not `.txt` — mcp-services/documents/templates.py renders
+        a self-contained HTML document (inline CSS, inline SVG logo), and
+        the extension is what makes Salesforce's file preview and a
+        downloaded copy actually render it as a styled page instead of
+        showing raw markup as plain text.
         """
         import base64
 
@@ -285,7 +291,7 @@ class LiveSalesforceClient:
         created = self._sf.ContentVersion.create(
             {
                 "Title": title,
-                "PathOnClient": f"{title}.txt",
+                "PathOnClient": f"{title}.html",
                 "VersionData": encoded,
                 "FirstPublishLocationId": opportunity_id,
             }

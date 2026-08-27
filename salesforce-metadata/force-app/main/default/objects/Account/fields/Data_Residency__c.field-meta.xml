@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Data_Residency__c</fullName>
+    <description>Confirmed data-residency requirement for this account. Blank means not yet confirmed — drives EnterpriseDealPilot&apos;s clarification flow and product-bundle eligibility.</description>
     <label>Data Residency</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <type>Picklist</type>
     <valueSet>
         <valueSetDefinition>
@@ -23,5 +26,4 @@
             </value>
         </valueSetDefinition>
     </valueSet>
-    <description>Confirmed data-residency requirement for this account. Blank means not yet confirmed — drives EnterpriseDealPilot&apos;s clarification flow and product-bundle eligibility.</description>
 </CustomField>
