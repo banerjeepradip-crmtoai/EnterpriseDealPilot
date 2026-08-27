@@ -119,6 +119,47 @@ class FixtureSalesforceClient:
         return record
 
 
+def _refresh_session_via_cli() -> tuple[str, str] | None:
+    """Mint a fresh Salesforce session by shelling out to the `sf` CLI.
+
+    Local-dev convenience only: the `sf` CLI is already authenticated on
+    a developer's machine (via `sf org login web`), so this is the exact
+    same "get a fresh token" step a human would otherwise run by hand
+    (`SF_TEMP_SHOW_SECRETS=true sf org display --json`) — just triggered
+    automatically when a call actually hits an expired session, instead
+    of failing and waiting for someone to notice and refresh it manually.
+
+    Returns None (never raises) if the CLI isn't installed, isn't
+    authenticated, or the alias doesn't exist — a deployed container has
+    none of that, so this always returns None there and the caller falls
+    back to its original, unchanged error.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    # shutil.which, not a bare "sf" — the CLI is a .cmd shim on Windows,
+    # and subprocess.run(["sf", ...]) without shell=True doesn't search
+    # PATHEXT the way a real shell does, so it can't find it by name
+    # alone. which() resolves the right executable on every OS.
+    sf_path = shutil.which("sf")
+    if sf_path is None:
+        return None
+    alias = os.environ.get("SALESFORCE_CLI_ALIAS", "enterprisedealpilot")
+    try:
+        result = subprocess.run(
+            [sf_path, "org", "display", "--target-org", alias, "--json"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env={**os.environ, "SF_TEMP_SHOW_SECRETS": "true"},
+        )
+        info = json.loads(result.stdout)["result"]
+        return info["accessToken"], info["instanceUrl"]
+    except Exception:
+        return None
+
+
 class LiveSalesforceClient:
     """Talks to a real Salesforce org via simple_salesforce.
 
@@ -157,11 +198,11 @@ class LiveSalesforceClient:
                 "simple_salesforce is required for LiveSalesforceClient; "
                 "install it or set SALESFORCE_MODE=fixture for local dev."
             ) from exc
-        session_id = os.environ.get("SALESFORCE_SESSION_ID")
-        if session_id:
+        self._session_id_mode = bool(os.environ.get("SALESFORCE_SESSION_ID"))
+        if self._session_id_mode:
             self._sf = Salesforce(
                 instance_url=os.environ["SALESFORCE_INSTANCE_URL"],
-                session_id=session_id,
+                session_id=os.environ["SALESFORCE_SESSION_ID"],
             )
         else:
             self._sf = Salesforce(
@@ -171,12 +212,49 @@ class LiveSalesforceClient:
                 domain=os.environ.get("SALESFORCE_DOMAIN", "test"),
             )
 
+    def _call(self, fn):
+        """Run one simple_salesforce call, auto-refreshing and retrying
+        once if the session has expired.
+
+        Only applies in session-id mode (a copy-pasted `sf org display`
+        token, the short-lived local-dev auth path) — username/password
+        auth re-logs in on every LiveSalesforceClient() construction
+        anyway, so it never hits this. Refresh works by shelling out to
+        the `sf` CLI, already authenticated on this machine — the same
+        thing a human would run by hand, just automatic. Deliberately
+        local-dev-only: a deployed container has no `sf` CLI and no
+        interactive login, so `_refresh_session_via_cli` just returns
+        None there and this re-raises the original error unchanged,
+        identical to the pre-refresh behavior in that mode.
+
+        Not thread-safe against concurrent refreshes (a local single-seller
+        demo scenario, not a concurrent-write system — see the class
+        docstring's optimistic-locking note for the same tradeoff).
+        """
+        from simple_salesforce.exceptions import SalesforceExpiredSession
+
+        try:
+            return fn()
+        except SalesforceExpiredSession:
+            if not self._session_id_mode:
+                raise
+            refreshed = _refresh_session_via_cli()
+            if refreshed is None:
+                raise
+            session_id, instance_url = refreshed
+            os.environ["SALESFORCE_SESSION_ID"] = session_id
+            os.environ["SALESFORCE_INSTANCE_URL"] = instance_url
+            from simple_salesforce import Salesforce  # type: ignore
+
+            self._sf = Salesforce(instance_url=instance_url, session_id=session_id)
+            return fn()
+
     def get_opportunity(self, opportunity_id: str) -> dict:
         soql = (
             f"SELECT {_soql_fields()}, LastModifiedDate, "
             f"Account.LastModifiedDate FROM Opportunity WHERE Id = '{opportunity_id}'"
         )
-        result = self._sf.query(soql)
+        result = self._call(lambda: self._sf.query(soql))
         if result["totalSize"] == 0:
             raise LookupError(f"Opportunity '{opportunity_id}' not found")
         record = result["records"][0]
@@ -215,9 +293,9 @@ class LiveSalesforceClient:
                 acct_updates["Data_Residency__c"] = value
 
         if opp_updates:
-            self._sf.Opportunity.update(opportunity_id, opp_updates)
+            self._call(lambda: self._sf.Opportunity.update(opportunity_id, opp_updates))
         if acct_updates:
-            self._sf.Account.update(current["AccountId"], acct_updates)
+            self._call(lambda: self._sf.Account.update(current["AccountId"], acct_updates))
 
         refreshed = self.get_opportunity(opportunity_id)
         result = {
@@ -254,7 +332,7 @@ class LiveSalesforceClient:
                 "Pending" if quote_line.get("requires_discount_approval") else "Not Required"
             ),
         }
-        created = self._sf.Quote.create(quote_fields)
+        created = self._call(lambda: self._sf.Quote.create(quote_fields))
         result = {
             "quote_id": created["id"],
             "opportunity_id": opportunity_id,
@@ -288,13 +366,15 @@ class LiveSalesforceClient:
         import base64
 
         encoded = base64.b64encode(document_text.encode("utf-8")).decode("ascii")
-        created = self._sf.ContentVersion.create(
-            {
-                "Title": title,
-                "PathOnClient": f"{title}.html",
-                "VersionData": encoded,
-                "FirstPublishLocationId": opportunity_id,
-            }
+        created = self._call(
+            lambda: self._sf.ContentVersion.create(
+                {
+                    "Title": title,
+                    "PathOnClient": f"{title}.html",
+                    "VersionData": encoded,
+                    "FirstPublishLocationId": opportunity_id,
+                }
+            )
         )
         return {
             "content_version_id": created["id"],
