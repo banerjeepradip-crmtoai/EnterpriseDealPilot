@@ -1,0 +1,17 @@
+{
+  "Id": "opp_nordic_telecom_renewal",
+  "Name": "Nordic Telecom AB - Enterprise Renewal FY26",
+  "StageName": "Needs Analysis",
+  "Amount": 184000,
+  "CloseDate": "2026-09-30",
+  "Budget_Confirmed__c": null,
+  "Use_Case__c": "Core network monitoring platform renewal with expanded seat count",
+  "AccountId": "acct_nordic_telecom",
+  "Account": {
+    "Id": "acct_nordic_telecom",
+    "Name": "Nordic Telecom AB",
+    "Industry": "Telecommunications",
+    "BillingCountry": "Sweden",
+    "Data_Residency__c": null
+  }
+}

@@ -1,0 +1,16 @@
+.env
+*.local.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+node_modules/
+.vscode/
+.idea/
+.husky/
+Thumbs.db
+*.log
+.adk/

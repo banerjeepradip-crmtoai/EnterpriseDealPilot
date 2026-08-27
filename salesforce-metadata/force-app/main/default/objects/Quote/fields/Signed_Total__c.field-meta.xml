@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Signed_Total__c</fullName>
+    <label>Signed Total</label>
+    <type>Currency</type>
+    <precision>16</precision>
+    <scale>2</scale>
+    <description>The authoritative, HMAC-signed total from mcp-services/pricing — not the standard GrandTotal, which is a system rollup from QuoteLineItems and can&apos;t be set directly without a full Product2/Pricebook2Entry setup (explicitly out of scope per the architecture doc).</description>
+</CustomField>

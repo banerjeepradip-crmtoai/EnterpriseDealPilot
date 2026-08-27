@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Budget_Confirmed__c</fullName>
+    <label>Budget Confirmed</label>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Yes</fullName>
+                <default>false</default>
+                <label>Yes</label>
+            </value>
+            <value>
+                <fullName>No</fullName>
+                <default>false</default>
+                <label>No</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <description>Whether the customer has formally confirmed budget. Blank means not yet confirmed (not the same as &quot;No&quot;) — drives EnterpriseDealPilot&apos;s clarification flow. Deliberately a Picklist, not a Checkbox: a Checkbox can&apos;t represent &quot;unset,&quot; which the missing-field logic depends on.</description>
+</CustomField>

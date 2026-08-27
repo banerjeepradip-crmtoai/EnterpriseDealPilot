@@ -1,0 +1,15 @@
+# Verified against google-adk 2.7.1 and mcp 1.29.1 (2026-08-27) — both
+# frameworks are under active development, re-check before bumping majors.
+#
+# mcp>=1.24,<2 is load-bearing, not a loose preference: google-adk 2.7.1's
+# MCPToolset (the client side an agent uses to call any mcp-services/*
+# server once deployed) only supports that range — mcp>=2 renamed
+# FastMCP to MCPServer and broke an import MCPToolset depends on
+# (mcp.shared.session.ProgressFnT). Every mcp-services/*/server.py uses
+# `mcp.server.fastmcp.FastMCP`, matching this pin. See docs/ROADMAP.md.
+google-adk>=2.7.1
+mcp>=1.24,<2
+simple-salesforce>=1.12.6
+pytest>=8.0.0
+google-auth
+requests

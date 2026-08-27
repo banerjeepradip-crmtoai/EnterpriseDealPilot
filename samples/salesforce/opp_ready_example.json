@@ -1,0 +1,17 @@
+{
+  "Id": "opp_ready_example",
+  "Name": "Baltic Freight Group - New Business",
+  "StageName": "Proposal",
+  "Amount": 96000,
+  "CloseDate": "2026-10-15",
+  "Budget_Confirmed__c": true,
+  "Use_Case__c": "Fleet telematics rollout, 40 vehicles",
+  "AccountId": "acct_baltic_freight",
+  "Account": {
+    "Id": "acct_baltic_freight",
+    "Name": "Baltic Freight Group",
+    "Industry": "Logistics",
+    "BillingCountry": "Latvia",
+    "Data_Residency__c": "EU"
+  }
+}

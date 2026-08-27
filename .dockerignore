@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.local.json
+.env
+*.docx
+salesforce-metadata/node_modules/
+salesforce-metadata/.vscode/
+salesforce-metadata/.husky/
+.git/

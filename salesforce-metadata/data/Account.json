@@ -1,0 +1,17 @@
+{
+  "records": [
+    {
+      "attributes": { "type": "Account", "referenceId": "AccountRef1" },
+      "Name": "Nordic Telecom AB",
+      "Industry": "Telecommunications",
+      "BillingCountry": "Sweden"
+    },
+    {
+      "attributes": { "type": "Account", "referenceId": "AccountRef2" },
+      "Name": "Baltic Freight Group",
+      "Industry": "Logistics",
+      "BillingCountry": "Latvia",
+      "Data_Residency__c": "EU"
+    }
+  ]
+}

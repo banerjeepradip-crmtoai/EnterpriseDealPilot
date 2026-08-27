@@ -1,0 +1,21 @@
+# Builds the public web demo image (Dockerfile.web) via Cloud Build.
+# `gcloud builds submit --tag ... ` only ever builds a file literally
+# named "Dockerfile" in the source root — this repo already has one for
+# mcp-services/*, so building Dockerfile.web needs an explicit config.
+#
+# Rebuild + push:
+#   gcloud builds submit --config=cloudbuild.web.yaml --project enterprisedealpilot .
+# Then redeploy the new image:
+#   gcloud run deploy dealpilot-web --image gcr.io/enterprisedealpilot/dealpilot-web \
+#     --region us-central1 --project enterprisedealpilot
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile.web
+      - -t
+      - gcr.io/enterprisedealpilot/dealpilot-web
+      - .
+images:
+  - gcr.io/enterprisedealpilot/dealpilot-web

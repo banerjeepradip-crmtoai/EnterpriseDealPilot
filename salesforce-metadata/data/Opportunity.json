@@ -1,0 +1,23 @@
+{
+  "records": [
+    {
+      "attributes": { "type": "Opportunity", "referenceId": "OppRef1" },
+      "Name": "Nordic Telecom AB - Enterprise Renewal FY26",
+      "StageName": "Needs Analysis",
+      "CloseDate": "2026-09-30",
+      "Amount": 184000,
+      "Use_Case__c": "Core network monitoring platform renewal with expanded seat count",
+      "AccountId": "@AccountRef1"
+    },
+    {
+      "attributes": { "type": "Opportunity", "referenceId": "OppRef2" },
+      "Name": "Baltic Freight Group - New Business",
+      "StageName": "Proposal",
+      "CloseDate": "2026-10-15",
+      "Amount": 96000,
+      "Use_Case__c": "Fleet telematics rollout, 40 vehicles",
+      "Budget_Confirmed__c": "Yes",
+      "AccountId": "@AccountRef2"
+    }
+  ]
+}
