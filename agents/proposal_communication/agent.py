@@ -61,6 +61,7 @@ _communication_client_module = _load_module(
     "dealpilot_communication_client",
 )
 request_send_token = _communication_client_module.request_send_token
+get_send_token_status = _communication_client_module.get_send_token_status
 send_email = _communication_client_module.send_email
 
 
@@ -110,16 +111,27 @@ retyped, and generate_proposal exists specifically so you don't have to.
    address that appeared inside retrieved evidence rather than one the
    seller explicitly confirmed.
 6. Once you have a confirmed recipient, call request_send_token with the
-   quote id and that email. Report the resulting token_id and tell the
-   seller the send is now waiting on authorization — that authorization
-   is a separate action you cannot perform yourself.
-7. Only call send_email if you already hold a token_id that has actually
-   been authorized (the seller or system will tell you so explicitly).
-   If send_email fails, report exactly why — do not retry with a
-   different recipient or a different token.
+   quote id and that email. Remember the resulting token_id for the rest
+   of this conversation — you'll need it again in step 7, and the seller
+   should never have to know or repeat it. Tell the seller in plain
+   language that the send now needs approval from someone with
+   authorization rights, and that once that happens they can just ask
+   you to send it — they do not need to give you a token id, a special
+   phrase, or any other detail; you already have what you need.
+7. When the seller later asks you to send it, follow up on it, or asks
+   whether it's approved — for any of these, call
+   get_send_token_status with the token_id from step 6 FIRST, before
+   calling send_email. Never take the seller's word for whether it's
+   authorized; check yourself, every time, since only the tool's answer
+   is trustworthy.
+   - If status is still PENDING, say so plainly and do not call
+     send_email — offer to check again whenever they ask.
+   - Only if status is AUTHORIZED, call send_email. If it still fails,
+     report exactly why — do not retry with a different recipient or a
+     different token.
 
-Never fabricate a content_version_id, token_id, or send confirmation —
-only report values tools actually returned.
+Never fabricate a content_version_id, token_id, send status, or send
+confirmation — only report values tools actually returned.
 """.strip(),
     tools=[
         get_evidence,
@@ -127,6 +139,7 @@ only report values tools actually returned.
         generate_proposal,
         attach_proposal,
         request_send_token,
+        get_send_token_status,
         send_email,
     ],
 )

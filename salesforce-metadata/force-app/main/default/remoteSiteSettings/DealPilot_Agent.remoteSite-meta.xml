@@ -3,6 +3,6 @@
     <fullName>DealPilot_Agent</fullName>
     <disableProtocolSecurity>false</disableProtocolSecurity>
     <isActive>true</isActive>
-    <url>https://squad-mammary-geranium.ngrok-free.dev</url>
-    <description>Allow-lists the ADK backend DealPilotAgentController calls. Must match DealPilot_Setting__mdt&apos;s Default record (Base_URL__c) — update both together when repointing, e.g. to a local ngrok tunnel or a future live-mode Cloud Run deployment.</description>
+    <url>https://dealpilot-live-444613256262.us-central1.run.app</url>
+    <description>Allow-lists the ADK backend DealPilotAgentController calls. Must match DealPilot_Setting__mdt&apos;s Default record (Base_URL__c) — update both together when repointing, e.g. to a local ngrok tunnel or the live-mode Cloud Run deployment (dealpilot-live).</description>
 </RemoteSiteSetting>

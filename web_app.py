@@ -37,8 +37,12 @@ explicitly set. Found live, the hard way: identical code succeeded in
 isolation and failed only once .env (with a leftover GOOGLE_API_KEY from
 the pre-Vertex-AI free tier) was sourced into the same process.
 """
+import importlib.util
 import os
+import sys
+from pathlib import Path
 
+from fastapi import HTTPException, Request
 from google.adk.cli.fast_api import get_fast_api_app
 
 os.environ.pop("GOOGLE_API_KEY", None)
@@ -55,3 +59,42 @@ app = get_fast_api_app(
     memory_service_uri=f"agentengine://{_MEMORY_BANK_RESOURCE}",
     port=int(os.environ.get("PORT", 8080)),
 )
+
+
+def _load_communication_client():
+    """Load mcp-services/communication/client.py by path — see
+    agents/proposal_communication/agent.py's copy of this helper for why a
+    bare `import client` would collide with a sibling service's client.py.
+    """
+    path = Path(__file__).resolve().parent / "mcp-services" / "communication" / "client.py"
+    if str(path.parent) not in sys.path:
+        sys.path.insert(0, str(path.parent))
+    spec = importlib.util.spec_from_file_location("dealpilot_web_communication_client", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@app.post("/admin/authorize-send-token")
+async def authorize_send_token(request: Request):
+    """Local stand-in for a human clicking "approve" on a pending send
+    token — see mcp-services/communication/client.py's module docstring
+    and scripts/approve_pending.py, which does the same thing for the
+    local dev backend. Needed here specifically because this deployed
+    instance's token store lives in ITS OWN container filesystem — a
+    script running against a developer's local repo checkout has no way
+    to reach it. Same public-unauthenticated posture as every other
+    endpoint on this service (see salesforce-metadata/README.md's
+    DealPilot Agent LWC section on why); not a production admin API.
+    """
+    body = await request.json()
+    token_id = body.get("token_id")
+    if not token_id:
+        raise HTTPException(status_code=400, detail="token_id is required")
+    authorized_by = body.get("authorized_by", "human approval via /admin endpoint")
+
+    client_module = _load_communication_client()
+    try:
+        return client_module.authorize_send(token_id, authorized_by)
+    except client_module.SendTokenNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

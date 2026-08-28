@@ -36,10 +36,20 @@ fleet walks it through pricing, approval, and proposal, writing real
 Quote/ContentVersion records back. Needs org access, so it isn't
 something a stranger with just a link can try — see
 [salesforce-metadata/README.md](salesforce-metadata/README.md)'s
-"DealPilot Agent LWC" section for what it is and its current one honest
-limit: the backend it calls runs locally behind an ngrok tunnel, so it
-only works while that process is up (not yet a standing Cloud Run
-deployment).
+"DealPilot Agent LWC" section for what it is.
+
+Its backend is now a standing Cloud Run deployment,
+`dealpilot-live` (https://dealpilot-live-444613256262.us-central1.run.app,
+`SALESFORCE_MODE=live`, kept at `min-instances=1` so in-memory sessions
+survive) — a separate service and separate service account from the
+public fixture-mode demo above, never the same one. It authenticates
+with a durable Salesforce username/password/security-token login
+(Secret Manager-held, see `scripts/setup_durable_salesforce_auth.ps1`)
+rather than a session token — `LiveSalesforceClient` re-authenticates on
+every request (see `mcp-services/salesforce/client.py`), so there is
+nothing that expires and nothing to refresh before a demo.
+`scripts/refresh_live_backend.ps1` is kept only as a fallback for the
+older session-token auth path, not needed in normal operation.
 
 ## Status
 
@@ -47,9 +57,9 @@ Phases 0-4 done and live-verified; Phase 5 mostly done (Cloud Run
 deployment, per-service Agent Identity + IAM, Agent Registry, correlation-id
 observability, and Vertex AI Memory Bank — all live; Agent Gateway is
 the one piece not built, see docs/ROADMAP.md for why); Phase 6 in
-progress (the Salesforce LWC below is built and live-verified; a standing
-Cloud Run deployment for its backend, failure rehearsal, and a
-clean-environment spin-up test remain open) — see
+progress (the Salesforce LWC is built, live-verified, and now backed by
+its own standing Cloud Run deployment — see "Try it live" above; failure
+rehearsal and a clean-environment spin-up test remain open) — see
 docs/ROADMAP.md for the exact definition of done and what's left in each.
 
 **Salesforce LWC (`dealPilotAgent` + `DealPilotAgentController`)** —

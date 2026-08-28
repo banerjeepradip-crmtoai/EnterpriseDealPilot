@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="1400" height="808" style="color:#161f1a" role="img" aria-label="Step by step: the seller messages the lead agent, which asks the pricing agent, then the risk agent, then the proposal agent, in that order — each one reports back before the next is asked. If a discount is too big, the process stops right after the risk check and the proposal agent is never asked at all. The proposal agent also scans evidence and blocks one fake item before writing the proposal.">
+  <style>
+    text { font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace; fill: currentColor; }
+  </style>
+  <rect x="0" y="0" width="900" height="520" fill="#eef0ec"></rect>
+  <defs>
+    <marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+    </marker>
+  </defs>
+
+  <g font-size="11.5">
+    <rect x="15" y="20" width="150" height="36" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="90" y="42" text-anchor="middle">Seller</text>
+
+    <rect x="195" y="20" width="150" height="36" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="270" y="42" text-anchor="middle">Deal Orchestrator</text>
+
+    <rect x="375" y="20" width="150" height="36" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="450" y="42" text-anchor="middle">Pricing Agent</text>
+
+    <rect x="555" y="20" width="150" height="36" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="630" y="42" text-anchor="middle">Risk Agent</text>
+
+    <rect x="735" y="20" width="150" height="36" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="810" y="42" text-anchor="middle">Proposal Agent</text>
+  </g>
+
+  <line x1="90" y1="56" x2="90" y2="490" stroke="currentColor" stroke-dasharray="2 4" opacity="0.55"></line>
+  <line x1="270" y1="56" x2="270" y2="490" stroke="currentColor" stroke-dasharray="2 4" opacity="0.55"></line>
+  <line x1="450" y1="56" x2="450" y2="490" stroke="currentColor" stroke-dasharray="2 4" opacity="0.55"></line>
+  <line x1="630" y1="56" x2="630" y2="490" stroke="currentColor" stroke-dasharray="2 4" opacity="0.55"></line>
+  <line x1="810" y1="56" x2="810" y2="490" stroke="currentColor" stroke-dasharray="2 4" opacity="0.55"></line>
+
+  <!-- 1: seller -> orchestrator -->
+  <line x1="90" y1="90" x2="266" y2="90" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="180" y="84" text-anchor="middle" font-size="10.5">"look up opportunity opp_ready_example"</text>
+
+  <!-- self: get_opportunity -->
+  <path d="M 270,104 C 320,104 320,122 270,122" fill="none" stroke="currentColor" marker-end="url(#seq-arrow)"></path>
+  <text x="326" y="116" font-size="10.5">looks up the customer record (test data)</text>
+
+  <!-- 2: orchestrator -> pricing -->
+  <line x1="270" y1="150" x2="446" y2="150" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="360" y="144" text-anchor="middle" font-size="10.5">hands off the details</text>
+
+  <!-- self: pricing calc -->
+  <path d="M 450,164 C 500,164 500,182 450,182" fill="none" stroke="currentColor" marker-end="url(#seq-arrow)"></path>
+  <text x="506" y="176" font-size="10.5">works out a price and locks it</text>
+
+  <!-- 3: pricing -> orchestrator -->
+  <line x1="450" y1="210" x2="274" y2="210" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="360" y="204" text-anchor="middle" font-size="10.5">sends back the locked price</text>
+
+  <!-- 4: orchestrator -> risk -->
+  <line x1="270" y1="240" x2="626" y2="240" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="450" y="234" text-anchor="middle" font-size="10.5">asks: does this need approval?</text>
+
+  <!-- 5: risk -> orchestrator -->
+  <line x1="630" y1="270" x2="274" y2="270" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="450" y="264" text-anchor="middle" font-size="10.5">"no approval needed" (this time)</text>
+
+  <!-- branch callout -->
+  <g style="color:#9c3a22">
+    <rect x="655" y="286" width="210" height="66" rx="4" fill="#e2e6de" stroke="currentColor" stroke-dasharray="3 3"></rect>
+    <text x="665" y="302" font-size="10">
+      <tspan x="665" dy="0">IF the discount is too big:</tspan>
+      <tspan x="665" dy="13">it waits for a person to</tspan>
+      <tspan x="665" dy="13">approve it. Nothing moves</tspan>
+      <tspan x="665" dy="13">forward — the proposal is</tspan>
+      <tspan x="665" dy="13">never even started.</tspan>
+    </text>
+  </g>
+
+  <!-- 6: orchestrator -> proposal -->
+  <line x1="270" y1="380" x2="806" y2="380" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="540" y="374" text-anchor="middle" font-size="10.5">hands off to write the proposal (only once cleared)</text>
+
+  <!-- self: screen evidence, blocked -->
+  <g style="color:#9c3a22">
+    <path d="M 810,394 C 862,394 862,412 810,412" fill="none" stroke="currentColor" marker-end="url(#seq-arrow)"></path>
+    <text x="500" y="428" font-size="10.5">scans the evidence &#8594; blocks 1 fake/malicious item automatically</text>
+  </g>
+
+  <!-- 7: proposal -> orchestrator -->
+  <line x1="810" y1="450" x2="274" y2="450" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="540" y="444" text-anchor="middle" font-size="10.5">proposal is ready &#183; asks who to send it to</text>
+
+  <!-- 8: orchestrator -> seller -->
+  <line x1="270" y1="480" x2="94" y2="480" stroke="currentColor" marker-end="url(#seq-arrow)"></line>
+  <text x="180" y="474" text-anchor="middle" font-size="10.5">reports everything back, exactly as it happened</text>
+</svg>

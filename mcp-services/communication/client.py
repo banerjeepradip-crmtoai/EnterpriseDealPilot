@@ -46,9 +46,35 @@ class SendNotAuthorized(PermissionError):
 
 
 def request_send_token(quote_id: str, recipient_email: str, requested_by: str = "seller") -> dict:
-    """Create a PENDING send authorization bound to exactly one recipient."""
+    """Create a PENDING send authorization bound to exactly one recipient.
+
+    Idempotent per (quote_id, recipient_email): a proposal_communication_agent
+    delegation is an isolated sub-conversation each time the orchestrator
+    calls it (see agents/orchestrator/agent.py), so it has no memory of a
+    token_id issued on a prior "send it" turn even within the same seller
+    chat. Re-requesting for the same quote+recipient returns the existing
+    unused token (PENDING or already AUTHORIZED) instead of minting a
+    duplicate PENDING one that would need separate approval — same
+    idempotency pattern used for Quote creation in mcp-services/salesforce.
+    """
     with _lock:
         tokens = _read_tokens()
+        matches = [
+            existing
+            for existing in tokens.values()
+            if existing["quote_id"] == quote_id
+            and existing["recipient_email"].lower() == recipient_email.lower()
+            and not existing["used"]
+        ]
+        if matches:
+            # Prefer an already-AUTHORIZED match over a merely-PENDING one —
+            # otherwise an old PENDING duplicate (e.g. from testing before
+            # this dedup existed) would keep winning forever even after a
+            # later duplicate for the same quote+recipient gets authorized.
+            for existing in matches:
+                if existing["status"] == "AUTHORIZED":
+                    return existing
+            return matches[0]
         token_id = f"tok_{uuid.uuid4().hex[:12]}"
         record = {
             "token_id": token_id,

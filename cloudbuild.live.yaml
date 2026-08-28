@@ -1,0 +1,24 @@
+# Builds the live-mode backend image (Dockerfile.web, SALESFORCE_MODE=live)
+# that Salesforce's dealPilotAgent LWC talks to directly on Cloud Run,
+# instead of through a local uvicorn + ngrok tunnel. Same Dockerfile.web
+# as the public fixture-mode demo (dealpilot-web) — the two differ only
+# in which Cloud Run service/env vars/secrets they're deployed with, not
+# in image content. See cloudbuild.web.yaml for why an explicit config is
+# needed to build a non-default-named Dockerfile.
+#
+# Rebuild + push:
+#   gcloud builds submit --config=cloudbuild.live.yaml --project enterprisedealpilot .
+# Then redeploy the new image:
+#   gcloud run deploy dealpilot-live --image gcr.io/enterprisedealpilot/dealpilot-live \
+#     --region us-central1 --project enterprisedealpilot
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile.web
+      - -t
+      - gcr.io/enterprisedealpilot/dealpilot-live
+      - .
+images:
+  - gcr.io/enterprisedealpilot/dealpilot-live

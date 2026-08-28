@@ -146,18 +146,27 @@ Opportunity record page, replacing `adk web`'s dev UI as the demo surface
   the ADK backend has no real auth to pair one with. A plain callout
   against a Remote-Site-Setting-allow-listed host is the correct, simpler
   mechanism for a genuinely public, unauthenticated endpoint. Ships
-  pointed at the already-public, fixture-mode Cloud Run demo
-  (`dealpilot-web`) as a safe default that's real and callable out of the
-  box — but fixture mode only recognizes the two fixture opportunity ids,
-  not a real Salesforce Id, so dropping the LWC onto an actual
-  Opportunity record needs a `SALESFORCE_MODE=live` backend instead (see
-  below).
+  pointed at `dealpilot-live` — a standing Cloud Run service running
+  `SALESFORCE_MODE=live` against this org
+  (`https://dealpilot-live-444613256262.us-central1.run.app`), separate
+  from the public fixture-mode demo (`dealpilot-web`) which only
+  recognizes the two fixture opportunity ids, not a real Salesforce Id.
 
-### Testing against this org, in real time, without a Cloud Run redeploy
+**`dealpilot-live` authenticates with a durable Salesforce
+username/password/security-token login**, not a session token — see
+`scripts/setup_durable_salesforce_auth.ps1` (run once, interactively,
+credentials go straight to Secret Manager). `LiveSalesforceClient`
+re-authenticates on every request (see `mcp-services/salesforce/client.py`'s
+username/password branch), so there's nothing that expires and nothing
+to refresh before a demo. (An earlier session-token-based setup needed
+`scripts/refresh_live_backend.ps1` run before every demo — kept in the
+repo as a fallback for that auth path, not needed day to day now.)
 
-Salesforce can't call `localhost`, so getting a locally-run,
-`SALESFORCE_MODE=live` backend (writing to *this* org in real time) in
-front of the LWC needs a tunnel:
+### Local iteration without a Cloud Run redeploy
+
+For quick local changes to the backend that you want the LWC to see
+immediately, without waiting on a Cloud Run build, point it at a local
+tunnel instead of `dealpilot-live`:
 
 ```bash
 # 1. .env: SALESFORCE_MODE=live, plus either SALESFORCE_SESSION_ID +
@@ -190,10 +199,10 @@ not scripted here on purpose, since it edits the org's existing page
 layout and should be a deliberate, visible action, not something applied
 blindly underneath an existing layout.
 
-**A tunnel URL is temporary** — it changes every time ngrok restarts
-(free tier), so the Named Credential needs re-pointing each session until
-this graduates to a real `SALESFORCE_MODE=live` Cloud Run deployment
-(tracked as a Phase 6 follow-up, not yet done — see `frontend/README.md`).
+**Remember to point `Base_URL__c` back at `dealpilot-live` afterward** —
+a tunnel URL is temporary (changes every ngrok restart on the free
+tier), and leaving it pointed at a closed tunnel breaks the demo the
+same way a stale session token does.
 
 **Remember the same reset step `create_quote_draft` live-testing already
 requires**, above: any real conversation run through the LWC against

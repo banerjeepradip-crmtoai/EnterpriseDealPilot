@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" width="1400" height="840" style="color:#161f1a" role="img" aria-label="The public demo website runs the lead agent and its three specialist agents all together in one place, using test data, and talks to Gemini directly. The six separate backend services below are real, deployed on their own, locked down, and tested working together — but the public demo does not currently call them.">
+  <style>
+    text { font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace; fill: currentColor; }
+  </style>
+  <rect x="0" y="0" width="900" height="540" fill="#eef0ec"></rect>
+  <defs>
+    <marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+    </marker>
+  </defs>
+
+  <!-- top row: seller + gemini -->
+  <rect x="20" y="20" width="150" height="44" rx="4" fill="none" stroke="currentColor"></rect>
+  <text x="95" y="46" text-anchor="middle" font-size="12">Seller (browser)</text>
+
+  <rect x="690" y="20" width="190" height="44" rx="4" fill="none" stroke="currentColor"></rect>
+  <text x="785" y="40" text-anchor="middle" font-size="12">Gemini 3.6 Flash</text>
+  <text x="785" y="54" text-anchor="middle" font-size="11" opacity="0.75">Google's AI, via Vertex AI</text>
+
+  <line x1="95" y1="64" x2="95" y2="94" stroke="currentColor" marker-end="url(#arch-arrow)"></line>
+  <text x="103" y="82" font-size="11">a message</text>
+
+  <line x1="750" y1="94" x2="782" y2="66" stroke="currentColor" marker-end="url(#arch-arrow)"></line>
+  <text x="700" y="80" font-size="11">asks Gemini</text>
+
+  <!-- zone 1: public demo -->
+  <rect x="20" y="96" width="860" height="130" rx="6" fill="none" stroke="currentColor" stroke-dasharray="5 4"></rect>
+  <text x="34" y="114" font-size="11" letter-spacing="0.03em">THE LIVE DEMO WEBSITE &#183; open to anyone</text>
+
+  <g font-size="12">
+    <rect x="60" y="128" width="180" height="48" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="150" y="147" text-anchor="middle">Deal</text>
+    <text x="150" y="162" text-anchor="middle">Orchestrator</text>
+
+    <rect x="260" y="128" width="180" height="48" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="350" y="147" text-anchor="middle">Solution &amp;</text>
+    <text x="350" y="162" text-anchor="middle">Pricing</text>
+
+    <rect x="460" y="128" width="180" height="48" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="550" y="147" text-anchor="middle">Risk &amp;</text>
+    <text x="550" y="162" text-anchor="middle">Approval</text>
+
+    <rect x="660" y="128" width="180" height="48" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="750" y="147" text-anchor="middle">Proposal &amp;</text>
+    <text x="750" y="162" text-anchor="middle">Communication</text>
+  </g>
+
+  <text x="450" y="200" text-anchor="middle" font-size="11" font-style="italic" opacity="0.8">all runs together in one place &#183; uses made-up test data &#183; doesn't call the services below</text>
+
+  <!-- divider -->
+  <line x1="20" y1="248" x2="880" y2="248" stroke="currentColor" stroke-dasharray="3 4" opacity="0.5"></line>
+  <g style="color:#9c3a22">
+    <rect x="300" y="236" width="300" height="18" style="fill:#e2e6de"></rect>
+    <text x="450" y="249" text-anchor="middle" font-size="11">&#8597; these two halves aren't connected to each other yet</text>
+  </g>
+
+  <!-- zone 2: backend services -->
+  <rect x="20" y="264" width="860" height="190" rx="6" fill="none" stroke="currentColor" stroke-dasharray="5 4"></rect>
+  <text x="34" y="282" font-size="11" letter-spacing="0.03em">6 SEPARATE BACKEND SERVICES &#183; each locked down, login required</text>
+
+  <g font-size="11.5">
+    <rect x="38" y="296" width="125" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="100" y="323" text-anchor="middle">Pricing</text>
+
+    <rect x="178" y="296" width="125" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="240" y="323" text-anchor="middle">Salesforce</text>
+
+    <rect x="318" y="296" width="125" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="380" y="323" text-anchor="middle">Approval</text>
+
+    <rect x="458" y="296" width="125" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="520" y="323" text-anchor="middle">Documents</text>
+
+    <rect x="598" y="296" width="125" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="660" y="323" text-anchor="middle">Security</text>
+
+    <rect x="738" y="296" width="125" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+    <text x="800" y="323" text-anchor="middle">Communication</text>
+  </g>
+
+  <path d="M 240,342 C 240,374 100,374 100,342" fill="none" stroke="currentColor" marker-end="url(#arch-arrow)"></path>
+  <text x="170" y="392" text-anchor="middle" font-size="10.5">checks the price is real</text>
+
+  <path d="M 520,342 C 520,412 240,412 240,342" fill="none" stroke="currentColor" marker-end="url(#arch-arrow)"></path>
+  <text x="380" y="430" text-anchor="middle" font-size="10.5">looks up quote / saves the file</text>
+
+  <line x1="660" y1="342" x2="660" y2="472" stroke="currentColor" marker-end="url(#arch-arrow)"></line>
+  <line x1="300" y1="342" x2="278" y2="472" stroke="currentColor" marker-end="url(#arch-arrow)"></line>
+
+  <!-- external systems -->
+  <rect x="178" y="472" width="200" height="44" rx="4" fill="none" stroke="currentColor"></rect>
+  <text x="278" y="490" text-anchor="middle" font-size="11">Salesforce</text>
+  <text x="278" y="504" text-anchor="middle" font-size="10.5" opacity="0.75">test data, or a real account</text>
+
+  <rect x="598" y="472" width="200" height="44" rx="4" fill="none" stroke="currentColor"></rect>
+  <text x="698" y="490" text-anchor="middle" font-size="11">Model Armor</text>
+  <text x="698" y="504" text-anchor="middle" font-size="10.5" opacity="0.75">Google's security scanner</text>
+</svg>
